@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Camera Slave</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+
+      var socket = io('/');
+
+      var mycamera = -1;
+
+      navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+
+      socket.on('connect', function(data) {
+        console.log('connected!');
+        document.body.style.background = "#0000FF";
+        document.title = '0';
+      });
+
+      socket.on('reconnecting', function(data) {
+        console.log('reconnecting!');
+        document.body.style.background = "#0000FF";
+        document.title = '1';
+      });
+
+      function setCamera(elem) {
+        mycamera = elem.selectedIndex + 1; // 0-indexed
+        console.log('i am camera', mycamera);
+        document.body.style.background = "#000000";
+      }
+
+      // when a new camera has been selected, check if
+      socket.on('notify', function (data) {
+        console.log(data)
+        if (data == mycamera) {
+          document.body.style.background = "#FF0000";
+          document.title = '1';
+          if (navigator.vibrate) {
+            navigator.vibrate(1000); // doesn't seem to work sometimes. :'(
+          }
+        } else {
+          document.body.style.background = "#000000";
+          document.title = '0';
+        }
+      });
+
+      // reflect total amount of cameras in dropdown menu
+      socket.on('amount', function (data) {
+        console.log(data)
+        var options = ''
+        for (var i = 0; i < data; i++) {
+          options += "<option>Kamera " + (i + 1) + "</option>";
+        }
+        document.getElementById('selector').innerHTML = options;
+      });
+    </script>
+      <select id="selector" onChange="setCamera(this);">
+      </select>
+  </body>
+</html>
